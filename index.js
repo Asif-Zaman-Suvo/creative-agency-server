@@ -110,38 +110,24 @@ client.connect(err => {
         const file = req.files.file;
         const serviceTitle = req.body.serviceTitle;
         const description = req.body.description;
-        const filePath = `${__dirname}/services/${file.name}`
+
+        const newImg = file.data
+        const encImg = newImg.toString('base64');
 
 
-        file.mv(filePath, err => {
-            if (err) {
-                console.log(err);
-                res.status(500).send({ msg: 'failed to upload' })
-            }
+        var image = {
+            contentType: file.mimetype,
+            size: file.size,
+            img: Buffer.from(encImg, 'base64')
+        };
 
-            const newImg = fs.readFileSync(filePath)
-            const encImg = newImg.toString('base64');
+        serviceCollection.insertOne({ serviceTitle, description, image })
+            .then(result => {
 
-            var image = {
-                contentType: req.files.file.mimetype,
-                size: req.files.file.size,
-                img: Buffer.from(encImg, 'base64')
-            };
+                res.send(result.insertedCount > 0)
 
-            serviceCollection.insertOne({ serviceTitle, description, image })
-                .then(result => {
+            })
 
-                    fs.remove(filePath, error => {
-                        if (error) {
-                            console.log(error)
-                            res.status(500).send({ msg: 'failed to upload' })
-                        }
-
-                        res.send(result.insertedCount > 0)
-                    })
-
-                })
-        })
 
 
     })
